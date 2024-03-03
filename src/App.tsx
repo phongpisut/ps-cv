@@ -1,31 +1,52 @@
-import React, { useCallback, useState, useEffect } from "react";
+import React, { useCallback, useState, useEffect, useRef } from "react";
 import "./App.css";
 
 import throttle from "lodash.throttle";
 import { motion, useScroll, useSpring, AnimatePresence } from "framer-motion";
 
+import { ToastContainer, toast, Bounce } from "react-toastify";
+import "react-toastify/dist/ReactToastify.css";
+
 import MyCanvas from "@/components/MyCanvas";
 import { Cursor } from "@/components/Cursor";
 import { socket } from "./socket";
-import LoginOverlay from "./components/LoginOverlay";
+import LoginOverlay from "@/components/LoginOverlay";
+import { getColor } from "@/utils/random";
 
 type User = {
   user: string;
   point: number[];
   nickname: string;
-}[];
+  color?: string;
+};
 
 type EventUser = {
   user: string;
   data: string;
 }[];
 
+type ItemState = {
+  [key: string]: {
+    status: boolean;
+    update_by: string;
+  };
+};
+
+type UserInZone = {
+  zone1: User[] | [];
+  zone2: User[] | [];
+};
+
 function App() {
   const [isConnected, setIsConnected] = useState<boolean>();
-  const [users, setUsers] = useState<User>([]);
-  const [toggle, setToggle] = useState(false);
+  const [userInZone, setUserInZone] = useState<UserInZone>({
+    zone1: [],
+    zone2: [],
+  });
   const [nickname, setNickname] = useState("");
-  const [allState, setAllState] = useState("");
+  const [allState, setAllState] = useState<ItemState>({});
+  const point = useRef("");
+  const colors = useRef("");
 
   const { scrollYProgress } = useScroll();
   const scaleX = useSpring(scrollYProgress, {
@@ -36,11 +57,12 @@ function App() {
 
   useEffect(() => {
     function onConnect() {
+      colors.current = getColor() as string;
       setIsConnected(true);
     }
 
-    function onConsumeState(value: string) {
-      if (value.includes("emoji@")) {
+    function onConsumeState(value: string | ItemState) {
+      if (typeof value === "string") {
         //emoji@[nickname]@[emoji]@[socketId]
         const emoji = value?.split("@");
         const nickname = emoji?.[1];
@@ -48,31 +70,58 @@ function App() {
         const socketId = emoji?.[3];
         console.log(`${nickname} [${socketId}] - just ${emojiName}!`);
       } else {
-        const itemState = value?.split("|");
-        setToggle(itemState[2] == "true");
+        console.log(value);
+        setAllState(value);
       }
     }
 
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     function onConsume(value: any) {
-      console.log(value);
       if (value?.messages) {
-        console.log(value);
-        setUsers(
-          (value?.messages as EventUser)
-            ?.filter((x) => x.user !== socket.id)
-            ?.map((y) => {
-              const userData = y.data.split("@");
-              const p = userData?.[1].split(",");
-              return {
-                user: y.user,
-                point: [+p[0], +p[1]],
-                nickname: userData?.[0],
-              };
-            })
-        );
+        const zone1: User[] = [];
+        const zone2: User[] = [];
+        (value?.messages as EventUser)
+          ?.filter((x) => x.user !== socket.id)
+          ?.forEach((y) => {
+            const userData = y.data.split("@");
+            const p = userData?.[1].split(",");
+            const data = {
+              user: y?.user,
+              point: [+p[0], +p[1]],
+              nickname: userData?.[0],
+              color: userData?.[3],
+            } as User;
+            if (userData[2] === "1") {
+              zone1.push(data);
+            } else if (userData[2] === "2") {
+              zone2.push(data);
+            }
+            setUserInZone({ zone1, zone2 });
+          });
         if (value?.items) {
-          console.log(value?.items);
+          setAllState(value?.items);
+        }
+      }
+      if (value?.description) {
+        const desc = value.description?.split("@");
+        const title =
+          desc?.[0] === "join"
+            ? `😁 ${desc[1]} Join!`
+            : desc?.[0] === "disconnect"
+            ? `🚪 ${desc[1]} Leave!`
+            : null;
+        if (desc[1] && title) {
+          toast(title, {
+            position: "top-right",
+            autoClose: 5000,
+            hideProgressBar: false,
+            closeOnClick: true,
+            pauseOnHover: true,
+            draggable: true,
+            progress: undefined,
+            theme: "light",
+            transition: Bounce,
+          });
         }
       }
     }
@@ -88,20 +137,18 @@ function App() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  useEffect(() => {
-    socket.emit("setState", `${nickname}|toggle|${toggle}`);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [toggle]);
-
   // eslint-disable-next-line react-hooks/exhaustive-deps
   const onMouseMove = useCallback(
     throttle((e: React.PointerEvent | null, zone: number) => {
+      if (e) {
+        point.current = `${e?.pageX},${e?.pageY}`;
+      }
       if (nickname) {
         socket.emit(
           "move",
-          `${nickname}@${(e as React.PointerEvent)?.pageX || 0},${
-            (e as React.PointerEvent)?.pageY || 0
-          }@${zone}`
+          `${nickname}@${e ? `${e.pageX},${e.pageY}` : point.current}@${zone}@${
+            colors.current
+          }`
         );
       }
     }, 200),
@@ -110,7 +157,23 @@ function App() {
 
   const onJoin = useCallback((name: string) => {
     setNickname(name);
+    socket.emit("join", `${name}@0,0@0@${colors.current}`);
   }, []);
+
+  const onChangeState = useCallback(
+    (name: string) => {
+      const newState = {
+        ...allState,
+        [name]: {
+          status: !allState[name]?.status,
+          update_by: nickname,
+        },
+      };
+      setAllState(newState);
+      socket.emit("setState", newState);
+    },
+    [allState, nickname]
+  );
 
   return (
     <div
@@ -118,6 +181,7 @@ function App() {
         !nickname && "overflow-y-hidden h-[100vh]"
       }`}
     >
+      <ToastContainer />
       <AnimatePresence>
         {!nickname && <LoginOverlay setNickname={onJoin} />}
       </AnimatePresence>
@@ -135,8 +199,8 @@ function App() {
               </h2>
               <input
                 type="checkbox"
-                checked={toggle}
-                onChange={() => setToggle((e) => !e)}
+                checked={allState?.["checkbox"]?.status || false}
+                onChange={() => onChangeState("checkbox")}
               />
 
               <p className="mt-4 text-gray-600">newformat data: [zone]-[x,y]</p>
@@ -156,11 +220,19 @@ function App() {
         onPointerMove={(e) => onMouseMove(e, 1)}
         onMouseLeave={() => onMouseMove(null, 0)}
       >
-        {isConnected &&
-          users?.length > 0 &&
-          users.map((x, i) => (
-            <Cursor point={x.point} username={x.nickname} key={`${i}-cursor`} />
-          ))}
+        <AnimatePresence>
+          {isConnected &&
+            userInZone.zone1.length > 0 &&
+            userInZone.zone1.map((x, i) => (
+              <Cursor
+                point={x.point}
+                username={x.nickname}
+                color={x.color}
+                key={`${i}-cursor`}
+              />
+            ))}
+        </AnimatePresence>
+
         <div className="mx-auto max-w-screen-xl px-4 py-16 sm:px-6 sm:py-24 lg:px-8">
           <div className="max-w-3xl">
             <h2 className="text-3xl font-bold sm:text-4xl">
