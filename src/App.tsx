@@ -1,17 +1,17 @@
 import React, { useCallback, useState, useEffect, useRef } from "react";
+import { socket } from "./socket";
 import "./App.css";
-
-import throttle from "lodash.throttle";
-import { motion, useScroll, useSpring, AnimatePresence } from "framer-motion";
-
-import { ToastContainer, toast, Bounce } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
+
+import { motion, useScroll, useSpring, AnimatePresence } from "framer-motion";
+import throttle from "lodash.throttle";
+import { ToastContainer, toast, Bounce } from "react-toastify";
 
 import MyCanvas from "@/components/MyCanvas";
 import { Cursor } from "@/components/Cursor";
-import { socket } from "./socket";
 import LoginOverlay from "@/components/LoginOverlay";
 import { getColor } from "@/utils/random";
+import profilePic from "@/assets/profile.jpg";
 
 type User = {
   user: string;
@@ -103,7 +103,8 @@ function App() {
         }
       }
       if (value?.description) {
-        const desc = value.description?.split("@");
+        const description = value?.description;
+        const desc = description?.split("@");
         const title =
           desc?.[0] === "join"
             ? `😁 ${desc[1]} Join!`
@@ -185,32 +186,44 @@ function App() {
       <AnimatePresence>
         {!nickname && <LoginOverlay setNickname={onJoin} />}
       </AnimatePresence>
-      <motion.div className="progress-bar" style={{ scaleX }} />
+      <motion.div
+        className="progress-bar bg-gradient-to-r from-cyan-500 to-blue-500 "
+        style={{ scaleX }}
+      />
       <section>
-        <div className="mx-auto max-w-screen-xl px-4 py-8 sm:px-6 sm:py-12 lg:px-8 lg:py-16">
-          <div className="grid grid-cols-1 gap-8 lg:grid-cols-2 lg:gap-16">
-            <div className="relative h-64 overflow-hidden rounded-lg sm:h-80 lg:order-last lg:h-full">
+        <div className="mx-auto max-w-screen-xl px-4 py-8 sm:px-6 sm:py-12 lg:px-8 lg:py-16 ">
+          <div className="grid grid-cols-1 gap-8 lg:grid-cols-2 lg:gap-16 relative">
+            <div className="z-10 relative h-64 overflow-visible rounded-lg sm:h-80 lg:order-last lg:h-full shadow-md max-h-[340px] ">
               <MyCanvas />
             </div>
 
-            <div className="lg:py-24">
-              <h2 className="text-3xl font-bold sm:text-4xl">
-                Grow your audience
-              </h2>
-              <input
-                type="checkbox"
-                checked={allState?.["checkbox"]?.status || false}
-                onChange={() => onChangeState("checkbox")}
-              />
+            <div className="lg:py-24 flex flex-col sm:flex-row items-center justify-center">
+              <div className="rounded-full w-64 h-auto relative z-10 min-w-[180px]">
+                <div className="w-full h-full absolute rounded-full bg-gradient-to-r from-indigo-500 via-purple-500 to-pink-500 opacity-10 hover:opacity-15 duration-300 ease-out transition" />
+                <img
+                  src={profilePic}
+                  className="rounded-full shadow-md z-[5]"
+                />
+              </div>
 
-              <p className="mt-4 text-gray-600">newformat data: [zone]-[x,y]</p>
+              <div className="p-5">
+                <h2
+                  className=" z-[5]
+                sm:pl-[5rem] sm:pr-[2rem] sm:-left-16 relative
+                text-3xl font-bold sm:text-4xl rounded-md md:rounded-r-md md:rounded-l-none bg-gradient-to-r from-cyan-500 to-blue-500 py-2 px-3 text-white"
+                >
+                  Phongpisut Meemuk
+                </h2>
+                <input
+                  type="checkbox"
+                  checked={allState?.["checkbox"]?.status || false}
+                  onChange={() => onChangeState("checkbox")}
+                />
 
-              <a
-                href="#"
-                className="mt-8 inline-block rounded bg-indigo-600 px-12 py-3 text-sm font-medium text-white transition hover:bg-indigo-700 focus:outline-none focus:ring focus:ring-yellow-400"
-              >
-                Get Started Today
-              </a>
+                <p className="mt-4 text-gray-600">
+                  newformat data: [zone]-[x,y]
+                </p>
+              </div>
             </div>
           </div>
         </div>
@@ -245,7 +258,7 @@ function App() {
             <div className="relative h-64 overflow-hidden sm:h-80 lg:h-full">
               <img
                 alt=""
-                src="https://images.unsplash.com/photo-1496843916299-590492c751f4?ixlib=rb-1.2.1&ixid=MnwxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8&auto=format&fit=crop&w=1771&q=80"
+                src=""
                 className="absolute inset-0 h-full w-full object-cover"
               />
             </div>

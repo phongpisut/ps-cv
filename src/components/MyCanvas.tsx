@@ -3,26 +3,38 @@ import { Canvas } from "@react-three/fiber";
 import {
   Environment,
   PerspectiveCamera,
-  PresentationControls,
+  OrbitControls,
 } from "@react-three/drei";
-import { Model } from "@/models/Poimandres";
+import { Model } from "@/models/Phongs";
+import { useMediaQuery } from "@/hooks/useMediaQuery";
 
 export default function MyCanvas() {
+  const md = useMediaQuery("(min-width: 640px)");
+  const lg = useMediaQuery("(min-width: 1024px)");
   return (
-    <Canvas style={{ maxWidth: "100%", maxHeight: "100%" }}>
+    <Canvas
+      className="absolute"
+      style={{ height: lg ? "26rem" : md ? "24em" : "19.5em", top: -30 }}
+    >
       <Suspense fallback={null}>
-        <PresentationControls
+        {/* <PresentationControls
           snap
           global
-          zoom={0.8}
-          rotation={[0, -Math.PI / 6, 0]}
+          zoom={0.9}
+          rotation={[0, 0, 0]}
           polar={[0, Math.PI / 4]}
           azimuth={[-Math.PI / 4, Math.PI / 4]}
-        >
-          <Model onClick={() => {}} />
-        </PresentationControls>
+        > */}
+        <OrbitControls
+          autoRotate
+          autoRotateSpeed={0.5}
+          enableZoom={false}
+          enablePan={false}
+        />
+        <Model onClick={() => {}} />
+        {/* </PresentationControls> */}
         <Environment files={"/sky.hdr"} />
-        <PerspectiveCamera makeDefault position={[0, 1, 10]} zoom={0.7} />
+        <PerspectiveCamera makeDefault position={[0, 10, 40]} zoom={0.38} />
       </Suspense>
     </Canvas>
   );

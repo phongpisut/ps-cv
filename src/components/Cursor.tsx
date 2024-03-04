@@ -1,7 +1,6 @@
 import * as React from "react";
 import { PerfectCursor } from "perfect-cursors";
-import { useIsPresent, motion } from "framer-motion";
-import popSmoke from "@/assets/popSmoke.png";
+import { motion } from "framer-motion";
 
 export function Cursor({
   point,
@@ -13,7 +12,6 @@ export function Cursor({
   color?: string;
 }) {
   const rCursor = React.useRef(null);
-  const isPresent = useIsPresent();
 
   const animateCursor = React.useCallback((point: number[]) => {
     const elm = rCursor.current;
@@ -77,13 +75,6 @@ export function Cursor({
         </svg>
         <div>{username}</div>
       </motion.div>
-
-      {!isPresent && (
-        <img
-          src={popSmoke}
-          className="absolute top-0 left-0 h-auto w-64 animate-pop"
-        />
-      )}
     </motion.div>
   );
 }
