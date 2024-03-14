@@ -10,14 +10,17 @@
     "preview": "vite preview"
   },
   "dependencies": {
+    "@radix-ui/react-slot": "^1.0.2",
     "@react-spring/parallax": "^9.7.3",
     "@react-three/drei": "^9.97.6",
     "@react-three/fiber": "^8.15.16",
     "@types/three": "^0.161.2",
+    "class-variance-authority": "^0.7.0",
     "clsx": "^2.1.0",
     "framer-motion": "^11.0.8",
     "lodash.debounce": "^4.0.8",
     "lodash.throttle": "^4.1.1",
+    "lucide-react": "^0.357.0",
     "perfect-cursors": "^1.0.5",
     "react": "^18.2.0",
     "react-contexify": "^6.0.0",
@@ -25,6 +28,7 @@
     "react-toastify": "^10.0.4",
     "socket.io-client": "^4.7.4",
     "tailwind-merge": "^2.2.1",
+    "tailwindcss-animate": "^1.0.7",
     "three": "^0.161.0"
   },
   "devDependencies": {

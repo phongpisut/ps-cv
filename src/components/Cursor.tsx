@@ -73,7 +73,12 @@ export function Cursor({
             <path d="m13 10.814v11.188l2.969-2.866.428-.139h4.768z" />
           </g>
         </svg>
-        <div>{username}</div>
+        <div
+          className="text-center min-w-16 px-2 text-gray-200 border-white border-2 rounded-lg font-bold shadow-sm absolute top-5 left-8"
+          style={{ backgroundColor: color }}
+        >
+          {username}
+        </div>
       </motion.div>
     </motion.div>
   );
