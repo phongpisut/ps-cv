@@ -256,19 +256,21 @@ function Page() {
               Lorem ipsum, dolor sit amet consectetur adipisicing elit. Quod
               alias doloribus impedit.
             </h2>
-            <div className="h-20 w-20 relative flex">
+            <div className="h-full w-full relative flex">
               <motion.div
                 className="w-5 h-9 bg-red-200"
-                animate={allState["box"]?.status ? { rotate: 90, x: 5 } : {}}
+                animate={
+                  allState["box"]?.status ? { rotate: 90, x: 10, y: 5 } : {}
+                }
                 onClick={() => onChangeState("box")}
               ></motion.div>
               <AnimatePresence>
                 {allState["box"]?.status && (
                   <motion.div
-                    initial={{ scale: 0.5, x: 2 }}
-                    animate={{ scale: 1, x: 10 }}
+                    initial={{ scaleX: 0.2, x: 2 }}
+                    animate={{ scaleX: 1, x: 15 }}
                     exit={{ opacity: 0, x: 2, scaleX: 0 }}
-                    className="h-2 w-10 bg-slate-400 absolute top-5"
+                    className="h-2 w-10 bg-slate-400 absolute top-7"
                   />
                 )}
               </AnimatePresence>
