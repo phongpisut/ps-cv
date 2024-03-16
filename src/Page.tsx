@@ -6,12 +6,18 @@ import "react-toastify/dist/ReactToastify.css";
 import { motion, useScroll, useSpring, AnimatePresence } from "framer-motion";
 import throttle from "lodash.throttle";
 import { ToastContainer, toast, Bounce } from "react-toastify";
-
+import {
+  TooltipProvider,
+  Tooltip,
+  TooltipContent,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
 import MyCanvas from "@/components/MyCanvas";
 import { Cursor } from "@/components/Cursor";
 import LoginOverlay from "@/components/LoginOverlay";
 import { getColor } from "@/lib/random";
 import profilePic from "@/assets/profile.jpg";
+import { useTheme } from "@/components/ThemeProvider";
 
 type User = {
   user: string;
@@ -54,6 +60,7 @@ function Page() {
     damping: 30,
     restDelta: 0.001,
   });
+  const { setTheme, theme } = useTheme();
 
   useEffect(() => {
     function onConnect() {
@@ -70,7 +77,6 @@ function Page() {
         const socketId = emoji?.[3];
         console.log(`${nickname} [${socketId}] - just ${emojiName}!`);
       } else {
-        console.log(value);
         setAllState(value);
       }
     }
@@ -176,10 +182,17 @@ function Page() {
     [allState, nickname]
   );
 
+  useEffect(() => {
+    if (allState["theme"]) {
+      setTheme(allState["theme"].status ? "dark" : "light");
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [allState["theme"]]);
+
   return (
     <div
-      className={`relative overflow-x-hidden ${
-        !nickname && "overflow-y-hidden h-[100vh]"
+      className={`bg-slate-50 flex flex-col items-center dark:bg-slate-900 transition-colors relative overflow-x-hidden  ${
+        !nickname && "overflow-y-hidden h-[100vh] "
       }`}
     >
       <ToastContainer />
@@ -190,125 +203,140 @@ function Page() {
         className="progress-bar bg-gradient-to-r from-cyan-500 to-blue-500 "
         style={{ scaleX }}
       />
-      <section>
-        <div className="mx-auto max-w-screen-xl px-4 py-8 sm:px-6 sm:py-12 lg:px-8 lg:py-16 ">
-          <div className="grid grid-cols-1 gap-8 lg:grid-cols-2 lg:gap-16 relative">
-            <div className="z-10 relative h-64 overflow-visible rounded-lg sm:h-80 lg:order-last lg:h-full shadow-md max-h-[340px] bg-gradient-to-b from-sky-500 to-indigo-500">
-              <MyCanvas />
-            </div>
+      <motion.div
+        animate={
+          theme == "dark"
+            ? {
+                width: "100vw",
+                clipPath: "circle(100% at 100px 100px)",
+                transition: {
+                  duration: "0.5",
+                },
+              }
+            : {
+                width: "100vw",
 
-            <div className="lg:py-24 flex flex-col sm:flex-row items-center justify-center">
-              <div className="rounded-full w-64 h-auto relative z-10 min-w-[180px]">
-                <div className="w-full h-full absolute rounded-full bg-gradient-to-r from-indigo-500 via-purple-500 to-pink-500 opacity-10 hover:opacity-15 duration-300 ease-out transition" />
-                <img
-                  src={profilePic}
-                  className="rounded-full shadow-md z-[5]"
-                />
+                clipPath: "circle(10px at 10px 10px)",
+                transition: {
+                  duration: "0.5",
+                },
+              }
+        }
+        exit={{ left: "-10px" }}
+        className="absolute bg-slate-900 -top-10 left-0 bottom-0 right-0"
+      />
+      <TooltipProvider>
+        <section className="max-w-screen-2xl">
+          <div className="mx-auto max-w-screen-xl px-4 py-8 sm:px-6 sm:py-12 lg:px-8 lg:py-16 ">
+            <div className="grid grid-cols-1 gap-8 lg:grid-cols-2 lg:gap-16 relative">
+              <div className="dark:shadow-lg dark:shadow-blue-500/50 z-10 relative h-64 overflow-visible rounded-lg sm:h-80 lg:order-last lg:h-full shadow-md max-h-[340px] bg-gradient-to-b from-sky-500 to-indigo-500">
+                <MyCanvas />
               </div>
 
-              <div className="p-5">
-                <h2
-                  className="dark:bg-white z-[5]
+              <div className="lg:py-24 flex flex-col sm:flex-row items-center justify-center">
+                <div className="rounded-full w-64 h-auto relative z-10 min-w-[180px] dark:shadow-lg dark:shadow-indigo-500/50">
+                  <div className=" w-full h-full absolute rounded-full bg-gradient-to-r from-indigo-500 via-purple-500 to-pink-500 opacity-10 hover:opacity-15 duration-300 ease-out transition" />
+                  <img
+                    src={profilePic}
+                    className="rounded-full shadow-md z-[5]"
+                  />
+                </div>
+
+                <div className="p-5 ">
+                  <h2
+                    className="dark:shadow-lg dark:shadow-blue-500/50 z-[5]
                 sm:pl-[5rem] sm:pr-[2rem] sm:-left-16 relative
                 text-3xl font-bold sm:text-4xl rounded-md md:rounded-r-md md:rounded-l-none md:-left-20 bg-gradient-to-r from-cyan-500 to-blue-500 py-2 px-3 text-white"
-                >
-                  Phongpisut Meemuk
-                </h2>
-                <p className="mt-4 text-gray-600 text-xl font-bold text-center sm:text-left">
-                  Web Front-end Developer
-                </p>
-                <p className="text-gray-600 text-xl  text-center sm:text-left">
-                  (Proficient in{" "}
-                  <span className="font-bold text-transparent bg-clip-text bg-gradient-to-r from-cyan-500 to-blue-500">
-                    ReactJS
-                  </span>{" "}
-                  )
-                </p>
+                  >
+                    Phongpisut Meemuk
+                  </h2>
+                  <p className="mt-4 text-gray-600 text-xl font-bold text-center sm:text-left dark:text-white transition-colors">
+                    Web Front-end Developer
+                  </p>
+                  <p className="text-gray-600 text-xl  text-center sm:text-left dark:text-white transition-colors">
+                    (Proficient in{" "}
+                    <span className="font-bold text-transparent bg-clip-text bg-gradient-to-r from-cyan-500 to-blue-500 ">
+                      ReactJS
+                    </span>{" "}
+                    )
+                  </p>
+                </div>
               </div>
             </div>
           </div>
-        </div>
-      </section>
-      <section
-        className="bg-slate-800"
-        onPointerMove={(e) => onMouseMove(e, 1)}
-        onMouseLeave={() => onMouseMove(null, 0)}
-      >
-        <div className="absolute right-1 rounded-b-md sm:right-20 text-white bg-gradient-to-b from-blue-500 bg-blue-600  shadow-md py-2 px-5 font-bold">
-          Cursor Zone 😁
-        </div>
-        <AnimatePresence>
-          {isConnected &&
-            userInZone.zone1.length > 0 &&
-            userInZone.zone1.map((x, i) => (
-              <Cursor
-                point={x.point}
-                username={x.nickname}
-                color={x.color}
-                key={`${i}-cursor`}
-              />
-            ))}
-        </AnimatePresence>
+        </section>
+        <section
+          className="bg-slate-800 max-w-screen-2xl w-full relative rounded-t-md"
+          onPointerMove={(e) => onMouseMove(e, 1)}
+          onMouseLeave={() => onMouseMove(null, 0)}
+        >
+          <div className="absolute right-1 rounded-b-md sm:right-0 text-white bg-gradient-to-b from-blue-500 bg-blue-600  shadow-md py-2 px-5 font-bold">
+            Cursor Zone 😁
+          </div>
+          <AnimatePresence>
+            {isConnected &&
+              userInZone.zone1.length > 0 &&
+              userInZone.zone1.map((x, i) => (
+                <Cursor
+                  point={x.point}
+                  username={x.nickname}
+                  color={x.color}
+                  key={`${i}-cursor`}
+                />
+              ))}
+          </AnimatePresence>
 
-        <div className="mx-auto max-w-screen-xl px-4 py-16 sm:px-6 sm:py-24 lg:px-8">
-          <div className="max-w-3xl">
-            <h2 className="text-3xl font-bold sm:text-4xl">
-              Lorem ipsum, dolor sit amet consectetur adipisicing elit. Quod
-              alias doloribus impedit.
-            </h2>
-            <div className="h-full w-full relative flex">
-              <motion.div
-                className="w-5 h-9 bg-red-200"
-                animate={
-                  allState["box"]?.status ? { rotate: 90, x: 10, y: 5 } : {}
-                }
-                onClick={() => onChangeState("box")}
-              ></motion.div>
-              <AnimatePresence>
-                {allState["box"]?.status && (
-                  <motion.div
-                    initial={{ scaleX: 0.2, x: 2 }}
-                    animate={{ scaleX: 1, x: 15 }}
-                    exit={{ opacity: 0, x: 2, scaleX: 0 }}
-                    className="h-2 w-10 bg-slate-400 absolute top-7"
-                  />
+          <div className="mx-auto max-w-screen-xl px-4 py-16 sm:px-6 sm:py-24 lg:px-8">
+            <div className="max-w-3xl">
+              <h2 className="text-3xl font-bold sm:text-4xl text-white">
+                Work experience
+              </h2>
+              <Tooltip>
+                <TooltipTrigger>
+                  <div className="h-full w-full relative flex">
+                    <motion.div
+                      className="w-5 h-9 bg-red-200"
+                      animate={
+                        allState["box"]?.status
+                          ? { rotate: 90, x: 10, y: 5 }
+                          : {}
+                      }
+                      onClick={() => onChangeState("box")}
+                    ></motion.div>
+                    <AnimatePresence>
+                      {allState["box"]?.status && (
+                        <motion.div
+                          initial={{ scaleX: 0.2, x: 2 }}
+                          animate={{ scaleX: 1, x: 15 }}
+                          exit={{ opacity: 0, x: 2, scaleX: 0 }}
+                          className="h-2 w-10 bg-slate-400 absolute top-7"
+                        />
+                      )}
+                    </AnimatePresence>
+                  </div>
+                </TooltipTrigger>
+                {allState["box"]?.update_by && (
+                  <TooltipContent>
+                    <p>{allState["box"]?.update_by}</p>
+                  </TooltipContent>
                 )}
-              </AnimatePresence>
+              </Tooltip>
             </div>
           </div>
+        </section>
 
-          <div className="mt-8 grid grid-cols-1 gap-8 lg:grid-cols-2 lg:gap-16">
-            <div className="relative h-64 overflow-hidden sm:h-80 lg:h-full">
-              <img
-                alt=""
-                src=""
-                className="absolute inset-0 h-full w-full object-cover"
-              />
+        <section className="bg-zinc-200 dark:bg-slate-900 transition-colors max-w-screen-2xl w-full ">
+          <div className="mx-auto min-h-[300px] max-w-screen-xl px-4 py-5 sm:px-6 lg:px-8 z-10 relative">
+            <div
+              className="max-w-3xl w-24 relative bg-blend-difference"
+              onClick={() => onChangeState("theme")}
+            >
+              Hobby
             </div>
-
-            <div className="lg:py-16">
-              <article className="space-y-4 text-gray-600">
-                <p>
-                  Lorem ipsum dolor, sit amet consectetur adipisicing elit. Aut
-                  qui hic atque tenetur quis eius quos ea neque sunt,
-                  accusantium soluta minus veniam tempora deserunt? Molestiae
-                  eius quidem quam repellat.
-                </p>
-
-                <p>
-                  Lorem ipsum dolor sit amet consectetur, adipisicing elit.
-                  Dolorum explicabo quidem voluptatum voluptas illo accusantium
-                  ipsam quis, vel mollitia? Vel provident culpa dignissimos
-                  possimus, perferendis consectetur odit accusantium dolorem
-                  amet voluptates aliquid, ducimus tempore incidunt quas.
-                  Veritatis molestias tempora distinctio voluptates sint! Itaque
-                  quasi corrupti, sequi quo odit illum impedit!
-                </p>
-              </article>
-            </div>
+            <div>A</div>
           </div>
-        </div>
-      </section>
+        </section>
+      </TooltipProvider>
     </div>
   );
 }
