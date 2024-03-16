@@ -42,11 +42,11 @@ export function Cursor({
       ref={rCursor}
       style={{
         position: "absolute",
-        top: -35,
-        left: 30,
+        top: -15,
+        left: -15,
         width: 35,
         height: 35,
-        zIndex: 100,
+        zIndex: 50,
       }}
     >
       <motion.div

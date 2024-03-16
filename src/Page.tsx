@@ -1,4 +1,10 @@
-import React, { useCallback, useState, useEffect, useRef } from "react";
+import React, {
+  useCallback,
+  useState,
+  useEffect,
+  useRef,
+  Suspense,
+} from "react";
 import { socket } from "./socket";
 import "./App.css";
 import "react-toastify/dist/ReactToastify.css";
@@ -6,6 +12,9 @@ import "react-toastify/dist/ReactToastify.css";
 import { motion, useScroll, useSpring, AnimatePresence } from "framer-motion";
 import throttle from "lodash.throttle";
 import { ToastContainer, toast, Bounce } from "react-toastify";
+import { initParticlesEngine } from "@tsparticles/react";
+import { loadStarsPreset } from "@tsparticles/preset-stars";
+
 import {
   TooltipProvider,
   Tooltip,
@@ -18,6 +27,10 @@ import LoginOverlay from "@/components/LoginOverlay";
 import { getColor } from "@/lib/random";
 import profilePic from "@/assets/profile.jpg";
 import { useTheme } from "@/components/ThemeProvider";
+import Star from "@/components/Star";
+import pot from "@/assets/pot.png";
+import dirt from "@/assets/dirt.png";
+import branch from "@/assets/branch.png";
 
 type User = {
   user: string;
@@ -102,6 +115,7 @@ function Page() {
             } else if (userData[2] === "2") {
               zone2.push(data);
             }
+            console.log(zone1, zone2);
             setUserInZone({ zone1, zone2 });
           });
         if (value?.items) {
@@ -148,7 +162,7 @@ function Page() {
   const onMouseMove = useCallback(
     throttle((e: React.PointerEvent | null, zone: number) => {
       if (e) {
-        point.current = `${e?.pageX},${e?.pageY}`;
+        point.current = `${e.pageX},${e.pageY}`;
       }
       if (nickname) {
         socket.emit(
@@ -189,15 +203,36 @@ function Page() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [allState["theme"]]);
 
+  const [init, setInit] = useState(false);
+  useEffect(() => {
+    initParticlesEngine(async (engine) => {
+      await loadStarsPreset(engine);
+    }).then(() => {
+      setInit(true);
+    });
+  }, []);
+
   return (
     <div
-      className={`bg-slate-50 flex flex-col items-center dark:bg-slate-900 transition-colors relative overflow-x-hidden  ${
+      className={`bg-zinc-200 flex flex-col items-center dark:bg-slate-900 transition-colors relative overflow-x-hidden  ${
         !nickname && "overflow-y-hidden h-[100vh] "
       }`}
     >
       <ToastContainer />
       <AnimatePresence>
         {!nickname && <LoginOverlay setNickname={onJoin} />}
+      </AnimatePresence>
+      <AnimatePresence>
+        {isConnected &&
+          userInZone.zone1.length > 0 &&
+          userInZone.zone1.map((x, i) => (
+            <Cursor
+              point={x.point}
+              username={x.nickname}
+              color={x.color}
+              key={`${i}-cursor`}
+            />
+          ))}
       </AnimatePresence>
       <motion.div
         className="progress-bar bg-gradient-to-r from-cyan-500 to-blue-500 "
@@ -265,51 +300,64 @@ function Page() {
             </div>
           </div>
         </section>
+
         <section
-          className="bg-slate-800 max-w-screen-2xl w-full relative rounded-t-md"
+          id="zone1"
+          className="bg-slate-800 max-w-screen-2xl w-full relative rounded-t-md dark:rounded-b-md z-20"
           onPointerMove={(e) => onMouseMove(e, 1)}
           onMouseLeave={() => onMouseMove(null, 0)}
         >
-          <div className="absolute right-1 rounded-b-md sm:right-0 text-white bg-gradient-to-b from-blue-500 bg-blue-600  shadow-md py-2 px-5 font-bold">
+          <div className="absolute right-1 rounded-bl-md rounded-tr-md sm:right-0 text-white bg-gradient-to-b from-blue-500 bg-blue-600  shadow-md py-2 px-5 font-bold">
             Cursor Zone 😁
           </div>
-          <AnimatePresence>
-            {isConnected &&
-              userInZone.zone1.length > 0 &&
-              userInZone.zone1.map((x, i) => (
-                <Cursor
-                  point={x.point}
-                  username={x.nickname}
-                  color={x.color}
-                  key={`${i}-cursor`}
-                />
-              ))}
-          </AnimatePresence>
 
-          <div className="mx-auto max-w-screen-xl px-4 py-16 sm:px-6 sm:py-24 lg:px-8">
-            <div className="max-w-3xl">
-              <h2 className="text-3xl font-bold sm:text-4xl text-white">
-                Work experience
+          <div className="mx-auto max-w-screen-xl px-4 py-8 sm:px-6 sm:py-8 lg:px-8">
+            <div className="w-full">
+              <h2 className="text-2xl sm:text-3xl font-bold text-transparent bg-clip-text bg-gradient-to-b from-white to-slate-400 text-center mt-5 ">
+                WORK EXPERIENCE
               </h2>
+              <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 md:grid-cols-3 my-5">
+                <div className="min-w-28 min-h-48 bg-slate-900 rounded-md shadow-slate-600 shadow-md hover:translate-y-2 transition-all duration-300" />
+                <div className="min-w-28 min-h-48 bg-slate-900 rounded-md shadow-slate-600 shadow-md hover:translate-y-2 transition-all duration-300" />
+                <div className="min-w-28 min-h-48 bg-slate-900 rounded-md shadow-slate-600 shadow-md hover:translate-y-2 transition-all duration-300" />
+              </div>
               <Tooltip>
                 <TooltipTrigger>
-                  <div className="h-full w-full relative flex">
-                    <motion.div
-                      className="w-5 h-9 bg-red-200"
-                      animate={
-                        allState["box"]?.status
-                          ? { rotate: 90, x: 10, y: 5 }
-                          : {}
-                      }
-                      onClick={() => onChangeState("box")}
-                    ></motion.div>
+                  <div
+                    className="h-full w-full relative flex items-end content-end"
+                    onClick={() => onChangeState("box")}
+                  >
+                    <div className="relative">
+                      <motion.img
+                        src={branch}
+                        draggable={false}
+                        animate={
+                          allState["box"]?.status
+                            ? { rotate: 45, x: 70, y: 65 }
+                            : {}
+                        }
+                        className="relative top-3 left-6 z-[4] "
+                      />
+                      <motion.img
+                        src={pot}
+                        draggable={false}
+                        animate={
+                          allState["box"]?.status
+                            ? { rotate: 90, x: 10, y: -15 }
+                            : {}
+                        }
+                        className="z-[5] relative"
+                      />
+                    </div>
                     <AnimatePresence>
                       {allState["box"]?.status && (
-                        <motion.div
+                        <motion.img
+                          src={dirt}
+                          draggable={false}
                           initial={{ scaleX: 0.2, x: 2 }}
-                          animate={{ scaleX: 1, x: 15 }}
+                          animate={{ scaleX: 1, x: 60, y: 0 }}
                           exit={{ opacity: 0, x: 2, scaleX: 0 }}
-                          className="h-2 w-10 bg-slate-400 absolute top-7"
+                          className="absolute bottom-0 z-[3] "
                         />
                       )}
                     </AnimatePresence>
@@ -325,7 +373,7 @@ function Page() {
           </div>
         </section>
 
-        <section className="bg-zinc-200 dark:bg-slate-900 transition-colors max-w-screen-2xl w-full ">
+        <section className="bg-zinc-300 dark:bg-slate-900 transition-colors max-w-screen-2xl w-full ">
           <div className="mx-auto min-h-[300px] max-w-screen-xl px-4 py-5 sm:px-6 lg:px-8 z-10 relative">
             <div
               className="max-w-3xl w-24 relative bg-blend-difference"
@@ -334,8 +382,12 @@ function Page() {
               Hobby
             </div>
             <div>A</div>
+            <div className="w-56 h-64"></div>
           </div>
         </section>
+        <Suspense>
+          <Star init={init} theme={theme} />
+        </Suspense>
       </TooltipProvider>
     </div>
   );
