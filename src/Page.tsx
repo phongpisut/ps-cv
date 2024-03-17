@@ -26,17 +26,13 @@ import LoginOverlay from "@/components/LoginOverlay";
 import { getColor } from "@/lib/random";
 import profilePic from "@/assets/profile.jpg";
 import { useTheme } from "@/components/ThemeProvider";
+import DisplayBox from "@/components/DisplayBox";
 import Star from "@/components/Star";
 import pot from "@/assets/pot.png";
 import dirt from "@/assets/dirt.png";
 import branch from "@/assets/branch.png";
 
-type User = {
-  user: string;
-  nickname: string;
-  color?: string;
-  position: number;
-};
+import type { User, UserInZone } from "@/types/user";
 
 type EventUser = {
   user: string;
@@ -48,10 +44,6 @@ type ItemState = {
     status: boolean;
     update_by: string;
   };
-};
-
-type UserInZone = {
-  [key: string]: User[] | [];
 };
 
 function Page() {
@@ -107,7 +99,7 @@ function Page() {
               color: userData?.[2],
               position: +userData?.[3],
             } as User;
-            console.log(userData);
+
             if (userData[1] !== "0") {
               if (!tempZone[userData[1]]) {
                 tempZone = { ...tempZone, [userData[1]]: [data] };
@@ -161,7 +153,15 @@ function Page() {
   const onMouseMove = useCallback(
     throttle((e: React.PointerEvent | null, zone: number) => {
       if (nickname) {
-        const rad = e ? Math.atan2(e.pageX - 200, e.pageY) : 0;
+        let rect = { left: 0, top: 0 };
+        const elem = document.getElementById(`zone${zone}`);
+        if (elem) {
+          const scale = elem.offsetWidth / 4;
+          const bound = elem.getBoundingClientRect();
+          rect = { left: bound.left + Math.floor(scale), top: bound.top };
+        }
+
+        const rad = e ? Math.atan2(e?.pageX - rect.left, e.pageY) : 0;
         const rot = rad * (180 / Math.PI) * 3;
         socket.emit("move", `${nickname}@${zone}@${colors.current}@${rot}`);
       }
@@ -296,48 +296,18 @@ function Page() {
               <h2 className="text-2xl sm:text-3xl font-bold text-transparent bg-clip-text bg-gradient-to-b from-white to-slate-400 text-center mt-5 ">
                 WORK EXPERIENCE
               </h2>
-              <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 md:grid-cols-3 my-5">
-                <div
-                  onPointerMove={(e) => onMouseMove(e, 1)}
-                  onMouseLeave={() => onMouseMove(null, 0)}
-                  className="min-w-28 min-h-48 bg-slate-900 rounded-md shadow-slate-600 shadow-md hover:translate-y-2 transition-all duration-300 relative"
-                >
-                  <div className="w-full absolute bottom-0 flex gap-4 place-content-end">
-                    <AnimatePresence>
-                      {isConnected &&
-                        userInZone?.["1"]?.length &&
-                        userInZone["1"].map((x, i) => (
-                          <motion.div
-                            key={`user-${i}`}
-                            initial={{ scale: 0, opacity: 0 }}
-                            animate={{
-                              scale: 1,
-                              opacity: 1,
-                            }}
-                            exit={{ y: 10, scale: 0, opacity: 0 }}
-                            className="relative w-12 top-1"
-                          >
-                            <motion.div
-                              animate={{
-                                rotate: x.position,
-                              }}
-                              className="w-6 h-8 bg-white rounded-full "
-                            />
-                            <p
-                              style={{ backgroundColor: x.color }}
-                              className="text-white mt-1 w-14 whitespace-nowrap overflow-hidden text-ellipsis h-6 px-1 rounded-lg -left-4 absolute"
-                            >
-                              {x.nickname}
-                            </p>
-                          </motion.div>
-                        ))}
-                    </AnimatePresence>
-                  </div>
-                </div>
-                <div
-                  onPointerMove={(e) => onMouseMove(e, 2)}
-                  onMouseLeave={() => onMouseMove(null, 0)}
-                  className="min-w-28 min-h-48 bg-slate-900 rounded-md shadow-slate-600 shadow-md hover:translate-y-2 transition-all duration-300"
+              <div className="grid grid-cols-1 gap-10 sm:gap-4 sm:grid-cols-2  my-5">
+                <DisplayBox
+                  isConnected={isConnected}
+                  userInZone={userInZone}
+                  zone={1}
+                  onMouseMove={onMouseMove}
+                />
+                <DisplayBox
+                  isConnected={isConnected}
+                  userInZone={userInZone}
+                  zone={2}
+                  onMouseMove={onMouseMove}
                 />
                 <div className="min-w-28 min-h-48 bg-slate-900 rounded-md shadow-slate-600 shadow-md hover:translate-y-2 transition-all duration-300" />
               </div>
@@ -397,7 +367,7 @@ function Page() {
           <div className="mx-auto min-h-[300px] max-w-screen-xl px-4 py-5 sm:px-6 lg:px-8 z-10 relative">
             <div
               onClick={() => onChangeState("theme")}
-              className="cursor-pointer w-24 h-10 rounded-full bg-gradient-to-r dark:bg-gradient-to-l dark:from-blue-950 dark:to-slate-950 from-sky-500 to-blue-500 flex items-center px-2 transition-colors"
+              className="cursor-pointer w-24 h-10 rounded-full bg-gradient-to-r dark:bg-gradient-to-l dark:from-blue-950 dark:to-slate-900 from-blue-500 to-zinc-300  flex items-center px-2 transition-colors"
             >
               <motion.div
                 animate={{ x: theme === "dark" ? "3rem" : 0 }}
