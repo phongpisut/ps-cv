@@ -22,7 +22,6 @@ import {
   TooltipTrigger,
 } from "@/components/ui/tooltip";
 import MyCanvas from "@/components/MyCanvas";
-import { Cursor } from "@/components/Cursor";
 import LoginOverlay from "@/components/LoginOverlay";
 import { getColor } from "@/lib/random";
 import profilePic from "@/assets/profile.jpg";
@@ -34,9 +33,9 @@ import branch from "@/assets/branch.png";
 
 type User = {
   user: string;
-  point: number[];
   nickname: string;
   color?: string;
+  position: number;
 };
 
 type EventUser = {
@@ -52,19 +51,19 @@ type ItemState = {
 };
 
 type UserInZone = {
-  zone1: User[] | [];
-  zone2: User[] | [];
+  [key: string]: User[] | [];
 };
 
 function Page() {
   const [isConnected, setIsConnected] = useState<boolean>();
   const [userInZone, setUserInZone] = useState<UserInZone>({
-    zone1: [],
-    zone2: [],
+    "1": [],
+    "2": [],
+    "3": [],
+    "4": [],
   });
   const [nickname, setNickname] = useState("");
   const [allState, setAllState] = useState<ItemState>({});
-  const point = useRef("");
   const colors = useRef("");
 
   const { scrollYProgress } = useScroll();
@@ -96,28 +95,28 @@ function Page() {
 
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     function onConsume(value: any) {
+      let tempZone: UserInZone = {};
       if (value?.messages) {
-        const zone1: User[] = [];
-        const zone2: User[] = [];
         (value?.messages as EventUser)
           ?.filter((x) => x.user !== socket.id)
           ?.forEach((y) => {
             const userData = y.data.split("@");
-            const p = userData?.[1].split(",");
             const data = {
               user: y?.user,
-              point: [+p[0], +p[1]],
               nickname: userData?.[0],
-              color: userData?.[3],
+              color: userData?.[2],
+              position: +userData?.[3],
             } as User;
-            if (userData[2] === "1") {
-              zone1.push(data);
-            } else if (userData[2] === "2") {
-              zone2.push(data);
+            console.log(userData);
+            if (userData[1] !== "0") {
+              if (!tempZone[userData[1]]) {
+                tempZone = { ...tempZone, [userData[1]]: [data] };
+              } else {
+                (tempZone[userData[1]] as User[]).push(data);
+              }
             }
-            console.log(zone1, zone2);
-            setUserInZone({ zone1, zone2 });
           });
+        setUserInZone(tempZone);
         if (value?.items) {
           setAllState(value?.items);
         }
@@ -161,24 +160,18 @@ function Page() {
   // eslint-disable-next-line react-hooks/exhaustive-deps
   const onMouseMove = useCallback(
     throttle((e: React.PointerEvent | null, zone: number) => {
-      if (e) {
-        point.current = `${e.pageX},${e.pageY}`;
-      }
       if (nickname) {
-        socket.emit(
-          "move",
-          `${nickname}@${e ? `${e.pageX},${e.pageY}` : point.current}@${zone}@${
-            colors.current
-          }`
-        );
+        const rad = e ? Math.atan2(e.pageX - 200, e.pageY) : 0;
+        const rot = rad * (180 / Math.PI) * 3;
+        socket.emit("move", `${nickname}@${zone}@${colors.current}@${rot}`);
       }
-    }, 200),
+    }, 300),
     [nickname]
   );
 
   const onJoin = useCallback((name: string) => {
     setNickname(name);
-    socket.emit("join", `${name}@0,0@0@${colors.current}`);
+    socket.emit("join", `${name}@0@${colors.current}`);
   }, []);
 
   const onChangeState = useCallback(
@@ -222,18 +215,7 @@ function Page() {
       <AnimatePresence>
         {!nickname && <LoginOverlay setNickname={onJoin} />}
       </AnimatePresence>
-      <AnimatePresence>
-        {isConnected &&
-          userInZone.zone1.length > 0 &&
-          userInZone.zone1.map((x, i) => (
-            <Cursor
-              point={x.point}
-              username={x.nickname}
-              color={x.color}
-              key={`${i}-cursor`}
-            />
-          ))}
-      </AnimatePresence>
+
       <motion.div
         className="progress-bar bg-gradient-to-r from-cyan-500 to-blue-500 "
         style={{ scaleX }}
@@ -304,8 +286,6 @@ function Page() {
         <section
           id="zone1"
           className="bg-slate-800 max-w-screen-2xl w-full relative rounded-t-md dark:rounded-b-md z-20"
-          onPointerMove={(e) => onMouseMove(e, 1)}
-          onMouseLeave={() => onMouseMove(null, 0)}
         >
           <div className="absolute right-1 rounded-bl-md rounded-tr-md sm:right-0 text-white bg-gradient-to-b from-blue-500 bg-blue-600  shadow-md py-2 px-5 font-bold">
             Cursor Zone 😁
@@ -317,8 +297,48 @@ function Page() {
                 WORK EXPERIENCE
               </h2>
               <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 md:grid-cols-3 my-5">
-                <div className="min-w-28 min-h-48 bg-slate-900 rounded-md shadow-slate-600 shadow-md hover:translate-y-2 transition-all duration-300" />
-                <div className="min-w-28 min-h-48 bg-slate-900 rounded-md shadow-slate-600 shadow-md hover:translate-y-2 transition-all duration-300" />
+                <div
+                  onPointerMove={(e) => onMouseMove(e, 1)}
+                  onMouseLeave={() => onMouseMove(null, 0)}
+                  className="min-w-28 min-h-48 bg-slate-900 rounded-md shadow-slate-600 shadow-md hover:translate-y-2 transition-all duration-300 relative"
+                >
+                  <div className="w-full absolute bottom-0 flex gap-4 place-content-end">
+                    <AnimatePresence>
+                      {isConnected &&
+                        userInZone?.["1"]?.length &&
+                        userInZone["1"].map((x, i) => (
+                          <motion.div
+                            key={`user-${i}`}
+                            initial={{ scale: 0, opacity: 0 }}
+                            animate={{
+                              scale: 1,
+                              opacity: 1,
+                            }}
+                            exit={{ y: 10, scale: 0, opacity: 0 }}
+                            className="relative w-12 top-1"
+                          >
+                            <motion.div
+                              animate={{
+                                rotate: x.position,
+                              }}
+                              className="w-6 h-8 bg-white rounded-full "
+                            />
+                            <p
+                              style={{ backgroundColor: x.color }}
+                              className="text-white mt-1 w-14 whitespace-nowrap overflow-hidden text-ellipsis h-6 px-1 rounded-lg -left-4 absolute"
+                            >
+                              {x.nickname}
+                            </p>
+                          </motion.div>
+                        ))}
+                    </AnimatePresence>
+                  </div>
+                </div>
+                <div
+                  onPointerMove={(e) => onMouseMove(e, 2)}
+                  onMouseLeave={() => onMouseMove(null, 0)}
+                  className="min-w-28 min-h-48 bg-slate-900 rounded-md shadow-slate-600 shadow-md hover:translate-y-2 transition-all duration-300"
+                />
                 <div className="min-w-28 min-h-48 bg-slate-900 rounded-md shadow-slate-600 shadow-md hover:translate-y-2 transition-all duration-300" />
               </div>
               <Tooltip>
@@ -376,11 +396,15 @@ function Page() {
         <section className="bg-zinc-300 dark:bg-slate-900 transition-colors max-w-screen-2xl w-full ">
           <div className="mx-auto min-h-[300px] max-w-screen-xl px-4 py-5 sm:px-6 lg:px-8 z-10 relative">
             <div
-              className="max-w-3xl w-24 relative bg-blend-difference"
               onClick={() => onChangeState("theme")}
+              className="cursor-pointer w-24 h-10 rounded-full bg-gradient-to-r dark:bg-gradient-to-l dark:from-blue-950 dark:to-slate-950 from-sky-500 to-blue-500 flex items-center px-2 transition-colors"
             >
-              Hobby
+              <motion.div
+                animate={{ x: theme === "dark" ? "3rem" : 0 }}
+                className=" w-7 h-7 rounded-full dark:from-yellow-400 dark:to-yellow-100 bg-gradient-to-t from-orange-500 to-red-500 shadow-sm shadow-white"
+              />
             </div>
+
             <div>A</div>
             <div className="w-56 h-64"></div>
           </div>
