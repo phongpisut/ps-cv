@@ -9,3 +9,15 @@
   transform-origin: 0%;
   z-index: 30;
 }
+
+.context {
+  --contexify-menu-bgColor: #fff;
+  --contexify-separator-color: #eee;
+  --contexify-item-color: #666;
+  --contexify-activeItem-color: #ffffff;
+  --contexify-activeItem-bgColor: #0f172a;
+  --contexify-rightSlot-color: #6f6e77;
+  --contexify-activeRightSlot-color: #fcfdfe;
+  --contexify-arrow-color: #6f6e77;
+  --contexify-activeArrow-color: #fff;
+}

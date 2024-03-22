@@ -14,6 +14,7 @@ import throttle from "lodash.throttle";
 import { ToastContainer, toast, Bounce } from "react-toastify";
 import { initParticlesEngine } from "@tsparticles/react";
 import { loadStarsPreset } from "@tsparticles/preset-stars";
+import { useContextMenu } from "react-contexify";
 
 import {
   TooltipProvider,
@@ -21,6 +22,7 @@ import {
   TooltipContent,
   TooltipTrigger,
 } from "@/components/ui/tooltip";
+
 import MyCanvas from "@/components/MyCanvas";
 import LoginOverlay from "@/components/LoginOverlay";
 import { getColor } from "@/lib/random";
@@ -28,9 +30,17 @@ import profilePic from "@/assets/profile.jpg";
 import { useTheme } from "@/components/ThemeProvider";
 import DisplayBox from "@/components/DisplayBox";
 import Star from "@/components/Star";
-import pot from "@/assets/pot.png";
-import dirt from "@/assets/dirt.png";
-import branch from "@/assets/branch.png";
+import ContextMenu from "@/components/Menu";
+
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
+
+import { plantPot, jobs, skill } from "@/assets";
 
 import type { User, UserInZone } from "@/types/user";
 
@@ -45,6 +55,8 @@ type ItemState = {
     update_by: string;
   };
 };
+
+const MENU_ID = "menu-id";
 
 function Page() {
   const [isConnected, setIsConnected] = useState<boolean>();
@@ -66,6 +78,46 @@ function Page() {
   });
   const { setTheme, theme } = useTheme();
 
+  const { show } = useContextMenu({
+    id: MENU_ID,
+  });
+
+  const [init, setInit] = useState(false);
+
+  useEffect(() => {
+    initParticlesEngine(async (engine) => {
+      await loadStarsPreset(engine);
+    }).then(() => {
+      setInit(true);
+    });
+  }, []);
+
+  useEffect(() => {
+    if (allState["theme"]) {
+      setTheme(allState["theme"].status ? "dark" : "light");
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [allState["theme"]]);
+
+  const toastEmoji = useCallback(
+    (emojiName: string, name = "") => {
+      const display =
+        emojiName == "like" ? "👍" : emojiName == "love" ? "🥰" : "😁";
+      toast(`${name || nickname} Send ${display}`, {
+        position: "bottom-right",
+        autoClose: 5000,
+        hideProgressBar: false,
+        closeOnClick: true,
+        pauseOnHover: true,
+        draggable: true,
+        progress: undefined,
+        theme: "light",
+        transition: Bounce,
+      });
+    },
+    [nickname]
+  );
+
   useEffect(() => {
     function onConnect() {
       colors.current = getColor() as string;
@@ -74,12 +126,12 @@ function Page() {
 
     function onConsumeState(value: string | ItemState) {
       if (typeof value === "string") {
-        //emoji@[nickname]@[emoji]@[socketId]
+        //emoji@[nickname]@[emoji]
+        console.log(value);
         const emoji = value?.split("@");
         const nickname = emoji?.[1];
         const emojiName = emoji?.[2] || "like";
-        const socketId = emoji?.[3];
-        console.log(`${nickname} [${socketId}] - just ${emojiName}!`);
+        toastEmoji(emojiName, nickname);
       } else {
         setAllState(value);
       }
@@ -180,7 +232,7 @@ function Page() {
         ...allState,
         [name]: {
           status: !allState[name]?.status,
-          update_by: nickname,
+          update_by: `${nickname}👆`,
         },
       };
       setAllState(newState);
@@ -189,21 +241,19 @@ function Page() {
     [allState, nickname]
   );
 
-  useEffect(() => {
-    if (allState["theme"]) {
-      setTheme(allState["theme"].status ? "dark" : "light");
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [allState["theme"]]);
+  const onSelectMenu = useCallback(
+    (menu: string) => {
+      toastEmoji(menu, "[You]");
+      socket.emit("emoji", `${nickname}@${menu}`);
+    },
+    [nickname, toastEmoji]
+  );
 
-  const [init, setInit] = useState(false);
-  useEffect(() => {
-    initParticlesEngine(async (engine) => {
-      await loadStarsPreset(engine);
-    }).then(() => {
-      setInit(true);
+  function displayMenu(e: React.MouseEvent) {
+    show({
+      event: e,
     });
-  }, []);
+  }
 
   return (
     <div
@@ -215,6 +265,8 @@ function Page() {
       <AnimatePresence>
         {!nickname && <LoginOverlay setNickname={onJoin} />}
       </AnimatePresence>
+
+      <ContextMenu handleItemClick={onSelectMenu} id={MENU_ID} />
 
       <motion.div
         className="progress-bar bg-gradient-to-r from-cyan-500 to-blue-500 "
@@ -252,7 +304,7 @@ function Page() {
 
               <div className="lg:py-24 flex flex-col sm:flex-row items-center justify-center">
                 <div className="rounded-full w-64 h-auto relative z-10 min-w-[180px] dark:shadow-lg dark:shadow-indigo-500/50">
-                  <div className=" w-full h-full absolute rounded-full bg-gradient-to-r from-indigo-500 via-purple-500 to-pink-500 opacity-10 hover:opacity-15 duration-300 ease-out transition" />
+                  <div className=" w-full h-full absolute rounded-full bg-gradient-to-r from-indigo-500 via-purple-500 to-pink-500 opacity-15 hover:opacity-30 duration-1000 ease-out transition" />
                   <img
                     src={profilePic}
                     className="rounded-full shadow-md z-[5]"
@@ -284,6 +336,7 @@ function Page() {
         </section>
 
         <section
+          onContextMenu={displayMenu}
           id="zone1"
           className="bg-slate-800 max-w-screen-2xl w-full relative rounded-t-md dark:rounded-b-md z-20"
         >
@@ -291,17 +344,35 @@ function Page() {
             Cursor Zone 😁
           </div>
 
-          <div className="mx-auto max-w-screen-xl px-4 py-8 sm:px-6 sm:py-8 lg:px-8">
+          <div className="mx-auto max-w-screen-xl px-4 py-8 sm:px-6 sm:py-8 lg:px-8 ">
             <div className="w-full">
               <h2 className="text-2xl sm:text-3xl font-bold text-transparent bg-clip-text bg-gradient-to-b from-white to-slate-400 text-center mt-5 ">
                 WORK EXPERIENCE
               </h2>
-              <div className="grid grid-cols-1 gap-10 sm:gap-4 sm:grid-cols-2  my-5">
+              <div className="grid grid-cols-1 gap-10 sm:gap-y-8 sm:gap-4 sm:grid-cols-2  my-5">
                 <DisplayBox
                   isConnected={isConnected}
                   userInZone={userInZone}
                   zone={1}
                   onMouseMove={onMouseMove}
+                  work={{
+                    img: jobs.scb,
+                    items: [
+                      {
+                        description: "I use Line",
+                        name: "Line Message API",
+                        img: skill.line,
+                      },
+                      {
+                        description: "I use A",
+                        name: "Line Message API",
+                        img: skill.line,
+                      },
+                    ],
+                    title: "SCBIT | SCB Connect",
+                    sub: "Front-End Developer",
+                    text: "I work at this place",
+                  }}
                 />
                 <DisplayBox
                   isConnected={isConnected}
@@ -309,7 +380,18 @@ function Page() {
                   zone={2}
                   onMouseMove={onMouseMove}
                 />
-                <div className="min-w-28 min-h-48 bg-slate-900 rounded-md shadow-slate-600 shadow-md hover:translate-y-2 transition-all duration-300" />
+                <DisplayBox
+                  isConnected={isConnected}
+                  userInZone={userInZone}
+                  zone={3}
+                  onMouseMove={onMouseMove}
+                />
+                <DisplayBox
+                  isConnected={isConnected}
+                  userInZone={userInZone}
+                  zone={4}
+                  onMouseMove={onMouseMove}
+                />
               </div>
               <Tooltip>
                 <TooltipTrigger>
@@ -317,9 +399,9 @@ function Page() {
                     className="h-full w-full relative flex items-end content-end"
                     onClick={() => onChangeState("box")}
                   >
-                    <div className="relative">
+                    <div className="relative hover:translate-x-1 transition-all ">
                       <motion.img
-                        src={branch}
+                        src={plantPot.plant}
                         draggable={false}
                         animate={
                           allState["box"]?.status
@@ -329,7 +411,7 @@ function Page() {
                         className="relative top-3 left-6 z-[4] "
                       />
                       <motion.img
-                        src={pot}
+                        src={plantPot.pot}
                         draggable={false}
                         animate={
                           allState["box"]?.status
@@ -342,7 +424,7 @@ function Page() {
                     <AnimatePresence>
                       {allState["box"]?.status && (
                         <motion.img
-                          src={dirt}
+                          src={plantPot.dirt}
                           draggable={false}
                           initial={{ scaleX: 0.2, x: 2 }}
                           animate={{ scaleX: 1, x: 60, y: 0 }}
@@ -367,7 +449,7 @@ function Page() {
           <div className="mx-auto min-h-[300px] max-w-screen-xl px-4 py-5 sm:px-6 lg:px-8 z-10 relative">
             <div
               onClick={() => onChangeState("theme")}
-              className="cursor-pointer w-24 h-10 rounded-full bg-gradient-to-r dark:bg-gradient-to-l dark:from-blue-950 dark:to-slate-900 from-blue-500 to-zinc-300  flex items-center px-2 transition-colors"
+              className="hover:opacity-80 transition-all cursor-pointer w-24 h-10 rounded-full bg-gradient-to-r dark:bg-gradient-to-l dark:from-blue-950 dark:to-slate-900 from-blue-500 to-zinc-300  flex items-center px-2"
             >
               <motion.div
                 animate={{ x: theme === "dark" ? "3rem" : 0 }}
@@ -375,8 +457,36 @@ function Page() {
               />
             </div>
 
-            <div>A</div>
-            <div className="w-56 h-64"></div>
+            <div className="mt-4 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
+              <Card className="w-full">
+                <CardHeader>
+                  <CardTitle>Hobby 🎮</CardTitle>
+                  <CardDescription>Game</CardDescription>
+                </CardHeader>
+                <CardContent></CardContent>
+              </Card>
+              <Card className="w-full">
+                <CardHeader>
+                  <CardTitle>Learning 📖</CardTitle>
+                  <CardDescription>...</CardDescription>
+                </CardHeader>
+                <CardContent></CardContent>
+              </Card>
+              <Card className="w-full">
+                <CardHeader>
+                  <CardTitle>Q/A</CardTitle>
+                  <CardDescription>...</CardDescription>
+                </CardHeader>
+                <CardContent></CardContent>
+              </Card>
+              <Card className="w-full col-span-1 sm:col-span-2 lg:col-span-3">
+                <CardHeader>
+                  <CardTitle>Thought / Projects</CardTitle>
+                  <CardDescription>...</CardDescription>
+                </CardHeader>
+                <CardContent></CardContent>
+              </Card>
+            </div>
           </div>
         </section>
         <Suspense>

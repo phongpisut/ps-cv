@@ -1,12 +1,32 @@
 import { PointerEvent } from "react";
 import type { UserInZone } from "@/types/user";
 import { AnimatePresence, motion } from "framer-motion";
+import {
+  HoverCard,
+  HoverCardContent,
+  HoverCardTrigger,
+} from "@/components/ui/hover-card";
 
 type DisplayBoxProps = {
   isConnected?: boolean;
   userInZone: UserInZone;
   zone: number;
   onMouseMove: (e: PointerEvent | null, zone: number) => void;
+  work?: Work;
+};
+
+type Work = {
+  title: string;
+  sub: string;
+  text: string;
+  img: string;
+  items: Items[];
+};
+
+type Items = {
+  img: string;
+  name: string;
+  description: string;
 };
 
 export default function DisplayBox({
@@ -14,14 +34,50 @@ export default function DisplayBox({
   onMouseMove,
   userInZone,
   zone,
+  work,
 }: DisplayBoxProps) {
   return (
-    <div
+    <motion.div
       id={`zone${zone}`}
       onPointerMove={(e) => onMouseMove(e, zone)}
       onMouseLeave={() => onMouseMove(null, 0)}
-      className="min-w-28 min-h-48 bg-slate-900 rounded-md shadow-slate-600 shadow-md hover:translate-y-2 transition-all duration-300 relative"
+      className="min-w-28 min-h-48 bg-slate-900 rounded-md shadow-slate-600 shadow-md transition-all hover:bg-slate-950 duration-500 relative p-5"
     >
+      {work && (
+        <div>
+          <div className="flex gap-3">
+            <img
+              src={work?.img}
+              alt="work"
+              className="w-12 h-12 rounded-full"
+            />
+            <div>
+              <h1 className="text-zinc-300 font-bold">{work?.title}</h1>
+              <h3 className="text-gray-500">{work?.sub}</h3>
+            </div>
+          </div>
+          <p className="mt-4 text-zinc-200">{work?.text}</p>
+          <div className="flex gap-2 mt-3">
+            {work?.items &&
+              work?.items.map((x, i) => (
+                <HoverCard key={`work-${i}`}>
+                  <HoverCardTrigger>
+                    <img
+                      src={x.img}
+                      alt=""
+                      className="w-8 h-8 rounded-full hover:opacity-70 hover:-translate-y-1 transition-all duration-300"
+                    />
+                  </HoverCardTrigger>
+                  <HoverCardContent>
+                    <img src={x.img} alt="" className="w-8 h-8 rounded-full" />
+                    <p>{x.name}</p>
+                    <p> {x.description}</p>
+                  </HoverCardContent>
+                </HoverCard>
+              ))}
+          </div>
+        </div>
+      )}
       <div className="w-full absolute bottom-0 flex gap-4 place-content-end">
         <AnimatePresence>
           {isConnected &&
@@ -55,6 +111,6 @@ export default function DisplayBox({
             ))}
         </AnimatePresence>
       </div>
-    </div>
+    </motion.div>
   );
 }
