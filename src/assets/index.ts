@@ -10,7 +10,9 @@ import kibana from "./kibana.jpeg"
 import k8s from "./k8s.png"
 import aws from "./aws.png"
 import typescript from "./typescript.png"
-import reactIcon from "./react.png"
+import reactIcon from "./react.jpg"
+import arcgis from './arcgis.png'
+import rn from './rn.png'
 
 export const skill = {
     line,
@@ -19,6 +21,8 @@ export const skill = {
     aws,
     ts : typescript,
     react: reactIcon,
+    rn,
+    arcgis
 }
 
 export const jobs = {

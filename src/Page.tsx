@@ -359,19 +359,23 @@ function Page() {
                     img: jobs.scb,
                     items: [
                       {
-                        description: "I use Line",
+                        description: `I used the LINE Message API for the first time. 
+                        I learned about sending different types of messages and how Chatbot agents work.`,
                         name: "Line Message API",
                         img: skill.line,
                       },
                       {
-                        description: "I use A",
-                        name: "Line Message API",
-                        img: skill.line,
+                        description: `I lead the development of a static website using 
+                        React.js (Typescript), with a focus on performance and constraints.`,
+                        name: "React.JS",
+                        img: skill.react,
                       },
                     ],
-                    title: "SCBIT | SCB Connect",
-                    sub: "Front-End Developer",
-                    text: "I work at this place",
+                    title: "SCB | Connect , Service Portal",
+                    sub: "Front-End Developer (Contract)",
+                    text: `I leverage React.js to build high-performance static LIFF web apps
+                     for the SCB Connect and guide the team by explaining the core of LINE LIFF and how it works.
+                     This knowledge helps them build the front-end effectively`,
                   }}
                 />
                 <DisplayBox
@@ -379,18 +383,91 @@ function Page() {
                   userInZone={userInZone}
                   zone={2}
                   onMouseMove={onMouseMove}
+                  work={{
+                    img: jobs.pttd,
+                    items: [
+                      {
+                        description: `I used ArcGIS to create 
+                        geofence markers and display map layers for the first time.`,
+                        name: "Arcgis.JS",
+                        img: skill.arcgis,
+                        className: "bg-white",
+                      },
+                      {
+                        description: `This is my first time transitioning from a 
+                        React Native developer to a web developer.`,
+                        name: "React.JS",
+                        img: skill.react,
+                      },
+                      {
+                        description: `I used Kubernetes to deploy a microservice for the first time.`,
+                        name: "Kubernetes",
+                        img: skill.k8s,
+                      },
+                    ],
+                    title: "PTT DIGITAL | ATA/A",
+                    sub: "Web Developer (Contract)",
+                    text: `Develop a dashboard and website that utilize custom markers 
+                    and geofences on a map using ArcGIS and React.js, 
+                    along with a static site project built with Vite.`,
+                  }}
                 />
                 <DisplayBox
                   isConnected={isConnected}
                   userInZone={userInZone}
                   zone={3}
                   onMouseMove={onMouseMove}
+                  work={{
+                    img: jobs.tcrb,
+                    items: [
+                      {
+                        description: `I gained the most knowledge about React Native from this place.`,
+                        name: "React Native",
+                        img: skill.rn,
+                        className: "bg-white",
+                      },
+                      {
+                        description: `Here, I started using TypeScript in production for the first time.`,
+                        name: "TypeScript",
+                        img: skill.ts,
+                      },
+                      {
+                        description: `I learned about AWS Pub/Sub service and Lambda.`,
+                        name: "Kubernetes",
+                        img: skill.aws,
+                      },
+                    ],
+                    title: "TCRB | Mobile Team",
+                    sub: "React Native Developer (Contract)",
+                    text: `Develop a mobile app using React Native with TypeScript.
+                     Validate data at runtime using io-ts and implement a native module for MLKit.`,
+                  }}
                 />
                 <DisplayBox
                   isConnected={isConnected}
                   userInZone={userInZone}
                   zone={4}
                   onMouseMove={onMouseMove}
+                  work={{
+                    img: jobs.fin,
+                    items: [
+                      {
+                        description: `I used React Native (Javascript) to develop a production app for the first time here.`,
+                        name: "React Native",
+                        img: skill.rn,
+                        className: "bg-white",
+                      },
+                      {
+                        description: `I used React.JS to develop a production static website for the first time here.`,
+                        name: "React.JS",
+                        img: skill.react,
+                      },
+                    ],
+                    title: "Fin Insurance",
+                    sub: "Front-end Developer (Full-time)",
+                    text: `This is the first place I worked after graduating. I develop a mobile app using React Native. Integrate a custom graph built
+                     with react-native-svg. Additionally, create a real-time website using Socket.IO.`,
+                  }}
                 />
               </div>
               <Tooltip>
@@ -458,13 +535,34 @@ function Page() {
             </div>
 
             <div className="mt-4 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
-              <Card className="w-full">
-                <CardHeader>
-                  <CardTitle>Hobby 🎮</CardTitle>
-                  <CardDescription>Game</CardDescription>
-                </CardHeader>
-                <CardContent></CardContent>
-              </Card>
+              <Tooltip>
+                <TooltipTrigger>
+                  <motion.div
+                    className="cursor-pointer"
+                    onClick={() => onChangeState("hobby")}
+                    animate={
+                      allState?.["hobby"]?.status
+                        ? {
+                            rotate: -3,
+                          }
+                        : {}
+                    }
+                  >
+                    <Card className="w-full">
+                      <CardHeader>
+                        <CardTitle>Hobby 🎮</CardTitle>
+                        <CardDescription>Game</CardDescription>
+                      </CardHeader>
+                      <CardContent></CardContent>
+                    </Card>
+                  </motion.div>
+                </TooltipTrigger>
+                {allState["hobby"]?.update_by && (
+                  <TooltipContent>
+                    <p>{allState["hobby"]?.update_by}</p>
+                  </TooltipContent>
+                )}
+              </Tooltip>
               <Card className="w-full">
                 <CardHeader>
                   <CardTitle>Learning 📖</CardTitle>

@@ -6,6 +6,7 @@ import {
   HoverCardContent,
   HoverCardTrigger,
 } from "@/components/ui/hover-card";
+import { cn } from "@/lib/utils";
 
 type DisplayBoxProps = {
   isConnected?: boolean;
@@ -25,6 +26,7 @@ type Work = {
 
 type Items = {
   img: string;
+  className?: string;
   name: string;
   description: string;
 };
@@ -65,13 +67,22 @@ export default function DisplayBox({
                     <img
                       src={x.img}
                       alt=""
-                      className="w-8 h-8 rounded-full hover:opacity-70 hover:-translate-y-1 transition-all duration-300"
+                      className={cn(
+                        "w-8 h-8 rounded-full hover:opacity-70 hover:-translate-y-1 transition-all duration-300",
+                        x?.className
+                      )}
                     />
                   </HoverCardTrigger>
                   <HoverCardContent>
-                    <img src={x.img} alt="" className="w-8 h-8 rounded-full" />
-                    <p>{x.name}</p>
-                    <p> {x.description}</p>
+                    <div className="flex gap-x-2 mb-2">
+                      <img
+                        src={x.img}
+                        alt=""
+                        className="w-8 h-8 rounded-full"
+                      />
+                      <p>{x.name}</p>
+                    </div>
+                    <p className="w-full"> {x.description}</p>
                   </HoverCardContent>
                 </HoverCard>
               ))}
