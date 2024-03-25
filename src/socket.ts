@@ -1,2 +1,2 @@
 import { io } from 'socket.io-client';
-export const socket = io("http://localhost:8080"); //https://rustio.onrender.com
+export const socket = io("https://rustio.onrender.com"); //https://rustio.onrender.com
