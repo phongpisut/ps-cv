@@ -20,10 +20,6 @@ jobs:
       - name: Install dependencies 🪄
         uses: bahmutov/npm-install@v1
 
-      - name: Check Env
-        run: |
-          echo ${{ secrets.SOCKET_URL}}
-
       - name: Build project 👷‍♂️
         run: npm run build
         env:
