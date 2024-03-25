@@ -13,6 +13,7 @@ import typescript from "./typescript.png"
 import reactIcon from "./react.jpg"
 import arcgis from './arcgis.png'
 import rn from './rn.png'
+import go from './go.png'
 
 export const skill = {
     line,
@@ -22,7 +23,8 @@ export const skill = {
     ts : typescript,
     react: reactIcon,
     rn,
-    arcgis
+    arcgis,
+    go,
 }
 
 export const jobs = {

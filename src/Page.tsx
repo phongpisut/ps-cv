@@ -15,6 +15,7 @@ import { ToastContainer, toast, Bounce } from "react-toastify";
 import { initParticlesEngine } from "@tsparticles/react";
 import { loadStarsPreset } from "@tsparticles/preset-stars";
 import { useContextMenu } from "react-contexify";
+import { Helmet } from "react-helmet-async";
 
 import {
   TooltipProvider,
@@ -31,14 +32,9 @@ import { useTheme } from "@/components/ThemeProvider";
 import DisplayBox from "@/components/DisplayBox";
 import Star from "@/components/Star";
 import ContextMenu from "@/components/Menu";
+import Projects from "@/components/Projects";
 
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 
 import { plantPot, jobs, skill } from "@/assets";
 
@@ -58,6 +54,7 @@ type ItemState = {
 
 const MENU_ID = "menu-id";
 
+let time: ReturnType<typeof setTimeout>;
 function Page() {
   const [isConnected, setIsConnected] = useState<boolean>();
   const [userInZone, setUserInZone] = useState<UserInZone>({
@@ -69,6 +66,8 @@ function Page() {
   const [nickname, setNickname] = useState("");
   const [allState, setAllState] = useState<ItemState>({});
   const colors = useRef("");
+  const golangRef = useRef<HTMLDivElement>(null);
+  const renderRef = useRef(0);
 
   const { scrollYProgress } = useScroll();
   const scaleX = useSpring(scrollYProgress, {
@@ -83,6 +82,13 @@ function Page() {
   });
 
   const [init, setInit] = useState(false);
+  const [title, setTitle] = useState("Phongpisut Meemuk");
+
+  useEffect(() => {
+    time = setTimeout(() => setTitle("Phongpisut Meemuk"), 4000);
+
+    return () => clearTimeout(time);
+  }, [title]);
 
   useEffect(() => {
     initParticlesEngine(async (engine) => {
@@ -93,8 +99,12 @@ function Page() {
   }, []);
 
   useEffect(() => {
-    if (allState["theme"]) {
-      setTheme(allState["theme"].status ? "dark" : "light");
+    const state = allState?.["theme"];
+    if (state) {
+      setTheme(state?.status ? "dark" : "light");
+      if (renderRef.current)
+        setTitle(state?.status ? "ในนี้มืดจังเลยนะฮะ 🌚" : "Light is back! 💡");
+      renderRef.current += 1;
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [allState["theme"]]);
@@ -223,6 +233,7 @@ function Page() {
 
   const onJoin = useCallback((name: string) => {
     setNickname(name);
+    setTitle(`Welcome ${name} 🥰`);
     socket.emit("join", `${name}@0@${colors.current}`);
   }, []);
 
@@ -261,6 +272,9 @@ function Page() {
         !nickname && "overflow-y-hidden h-[100vh] "
       }`}
     >
+      <Helmet>
+        <title>{title}</title>
+      </Helmet>
       <ToastContainer />
       <AnimatePresence>
         {!nickname && <LoginOverlay setNickname={onJoin} />}
@@ -338,7 +352,7 @@ function Page() {
         <section
           onContextMenu={displayMenu}
           id="zone1"
-          className="bg-slate-800 max-w-screen-2xl w-full relative rounded-t-md dark:rounded-b-md z-20"
+          className="bg-slate-800 max-w-screen-2xl w-full relative rounded-t-md 2xl:rounded-b-md z-20"
         >
           <div className="absolute right-1 rounded-bl-md rounded-tr-md sm:right-0 text-white bg-gradient-to-b from-blue-500 bg-blue-600  shadow-md py-2 px-5 font-bold">
             Cursor Zone 😁
@@ -522,11 +536,11 @@ function Page() {
           </div>
         </section>
 
-        <section className="bg-zinc-300 dark:bg-slate-900 transition-colors max-w-screen-2xl w-full ">
+        <section className="bg-zinc-200 dark:bg-slate-900 transition-colors max-w-screen-2xl w-full min-h-[450px]">
           <div className="mx-auto min-h-[300px] max-w-screen-xl px-4 py-5 sm:px-6 lg:px-8 z-10 relative">
             <div
               onClick={() => onChangeState("theme")}
-              className="hover:opacity-80 transition-all cursor-pointer w-24 h-10 rounded-full bg-gradient-to-r dark:bg-gradient-to-l dark:from-blue-950 dark:to-slate-900 from-blue-500 to-zinc-300  flex items-center px-2"
+              className="hover:opacity-80 transition-all cursor-pointer w-24 h-10 rounded-full bg-gradient-to-r dark:bg-gradient-to-l dark:from-blue-950 dark:to-slate-900 from-sky-500 to-zinc-200  flex items-center px-2"
             >
               <motion.div
                 animate={{ x: theme === "dark" ? "3rem" : 0 }}
@@ -534,11 +548,11 @@ function Page() {
               />
             </div>
 
-            <div className="mt-4 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
+            <div className="mt-4 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 items-start mb-10">
               <Tooltip>
                 <TooltipTrigger>
                   <motion.div
-                    className="cursor-pointer"
+                    className="cursor-pointer text-left"
                     onClick={() => onChangeState("hobby")}
                     animate={
                       allState?.["hobby"]?.status
@@ -548,12 +562,32 @@ function Page() {
                         : {}
                     }
                   >
-                    <Card className="w-full">
+                    <Card className="w-full pb-4">
                       <CardHeader>
-                        <CardTitle>Hobby 🎮</CardTitle>
-                        <CardDescription>Game</CardDescription>
+                        <CardTitle>About Me</CardTitle>
                       </CardHeader>
-                      <CardContent></CardContent>
+                      <CardContent>
+                        <b>Personality 😶</b>
+                        <p>
+                          My personality can be described as INFJ or INFP
+                          according to the MBTI, mostly because I am introverted
+                          but I have a highly adaptable ability.
+                        </p>
+                        <br />
+                        <b>Hobby 🎮</b>
+                        <p>
+                          Mostly, I play PC games, but sometimes I find myself
+                          immersed in new frameworks or programming language
+                          videos.
+                        </p>
+                        <br />
+                        <b>Why 🤔</b>
+                        <p>
+                          You might ask why I change jobs so often. It's mainly
+                          because I prioritize avoiding long commutes 🚋 or
+                          gaining new experiences.
+                        </p>
+                      </CardContent>
                     </Card>
                   </motion.div>
                 </TooltipTrigger>
@@ -563,26 +597,110 @@ function Page() {
                   </TooltipContent>
                 )}
               </Tooltip>
+
+              <Tooltip>
+                <TooltipTrigger>
+                  <motion.div
+                    className="cursor-pointer text-left"
+                    onClick={() => onChangeState("learn")}
+                    animate={
+                      allState?.["learn"]?.status
+                        ? {
+                            rotate: 3,
+                          }
+                        : {}
+                    }
+                  >
+                    <Card className="w-full">
+                      <CardHeader>
+                        <CardTitle>Learning 📖</CardTitle>
+                      </CardHeader>
+                      <CardContent>
+                        <p>
+                          For complex front-end websites, I think
+                          <span className="font-bold text-blue-500">
+                            {" React.js "}
+                          </span>
+                          remains unbeatable due to its rich ecosystem. While
+                          I've tried frameworks like
+                          <span className="font-bold text-slate-700 dark:text-zinc-300">
+                            {" Svelte "}
+                          </span>
+                          and
+                          <span className="font-bold text-slate-700 dark:text-zinc-300">
+                            {" Vue "}
+                          </span>
+                          to confirm their performance claims (and yes, they
+                          really are fast), they lack the comprehensive support
+                          <span className="font-bold text-blue-500">
+                            {" React "}
+                          </span>
+                          offers.
+                        </p>
+                        <br />
+                        <p>
+                          For high-performance back-end development, Rust and Go
+                          are certainly top contenders. While I haven't enjoyed
+                          learning
+                          <span className="font-bold text-stone-600 dark:text-stone-400">
+                            {" Rust "}
+                          </span>
+                          as much, I find myself drawn to{" "}
+                          <span className="font-bold text-cyan-500">
+                            {" Go "}
+                          </span>
+                          . I often watch Golang videos and code simple projects
+                          for fun, and I'm quite fond of it,
+                        </p>
+                        <br />
+                        <div
+                          className="flex items-center relative"
+                          ref={golangRef}
+                        >
+                          <p>So, I'm on track to learn more</p>
+                          <motion.img
+                            animate={
+                              allState["learn"]?.status
+                                ? {
+                                    x: golangRef?.current?.clientWidth
+                                      ? golangRef?.current?.clientWidth - 228
+                                      : 0,
+                                  }
+                                : { x: 0 }
+                            }
+                            transition={
+                              allState["learn"]?.status
+                                ? {
+                                    ease: "easeOut",
+                                    duration: 2,
+                                  }
+                                : {
+                                    ease: "easeOut",
+                                    duration: 0.5,
+                                  }
+                            }
+                            className="w-[2rem] h-[0.76rem] ml-1 mt-1"
+                            src={skill.go}
+                          />
+                        </div>
+                      </CardContent>
+                    </Card>
+                  </motion.div>
+                </TooltipTrigger>
+                {allState["learn"]?.update_by && (
+                  <TooltipContent>
+                    <p>{allState["learn"]?.update_by}</p>
+                  </TooltipContent>
+                )}
+              </Tooltip>
+
               <Card className="w-full">
                 <CardHeader>
-                  <CardTitle>Learning 📖</CardTitle>
-                  <CardDescription>...</CardDescription>
+                  <CardTitle>Projects</CardTitle>
                 </CardHeader>
-                <CardContent></CardContent>
-              </Card>
-              <Card className="w-full">
-                <CardHeader>
-                  <CardTitle>Q/A</CardTitle>
-                  <CardDescription>...</CardDescription>
-                </CardHeader>
-                <CardContent></CardContent>
-              </Card>
-              <Card className="w-full col-span-1 sm:col-span-2 lg:col-span-3">
-                <CardHeader>
-                  <CardTitle>Thought / Projects</CardTitle>
-                  <CardDescription>...</CardDescription>
-                </CardHeader>
-                <CardContent></CardContent>
+                <CardContent>
+                  <Projects />
+                </CardContent>
               </Card>
             </div>
           </div>

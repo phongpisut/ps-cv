@@ -1,4 +1,4 @@
-import { PointerEvent } from "react";
+import { PointerEvent, useState } from "react";
 import type { UserInZone } from "@/types/user";
 import { AnimatePresence, motion } from "framer-motion";
 import {
@@ -38,6 +38,7 @@ export default function DisplayBox({
   zone,
   work,
 }: DisplayBoxProps) {
+  const [active, setActive] = useState<number | null>(null);
   return (
     <motion.div
       id={`zone${zone}`}
@@ -55,38 +56,55 @@ export default function DisplayBox({
             />
             <div>
               <h1 className="text-zinc-300 font-bold">{work?.title}</h1>
-              <h3 className="text-gray-500">{work?.sub}</h3>
+              <h3 className="text-gray-300">{work?.sub}</h3>
             </div>
           </div>
           <p className="mt-4 text-zinc-200">{work?.text}</p>
-          <div className="flex gap-2 mt-3">
-            {work?.items &&
-              work?.items.map((x, i) => (
-                <HoverCard key={`work-${i}`}>
-                  <HoverCardTrigger>
-                    <img
-                      src={x.img}
-                      alt=""
-                      className={cn(
-                        "w-8 h-8 rounded-full hover:opacity-70 hover:-translate-y-1 transition-all duration-300",
-                        x?.className
-                      )}
-                    />
-                  </HoverCardTrigger>
-                  <HoverCardContent>
-                    <div className="flex gap-x-2 mb-2">
+          {work?.items && (
+            <div>
+              <div className="flex gap-2 mt-3">
+                {work?.items.map((x, i) => (
+                  <HoverCard key={`work-${i}`}>
+                    <HoverCardTrigger>
                       <img
                         src={x.img}
+                        onClick={() => setActive(i)}
                         alt=""
-                        className="w-8 h-8 rounded-full"
+                        className={cn(
+                          `w-8 h-8 rounded-full hover:opacity-70 hover:-translate-y-1 transition-all cursor-pointer duration-300 ${
+                            active === i && "-translate-y-1"
+                          }`,
+                          x?.className
+                        )}
                       />
-                      <p>{x.name}</p>
-                    </div>
-                    <p className="w-full"> {x.description}</p>
-                  </HoverCardContent>
-                </HoverCard>
-              ))}
-          </div>
+                    </HoverCardTrigger>
+                    <HoverCardContent>
+                      <div className="flex gap-x-2 mb-2">
+                        <img
+                          src={x.img}
+                          alt=""
+                          className="w-8 h-8 rounded-full"
+                        />
+                        <p>{x.name}</p>
+                      </div>
+                      <p className="w-full"> {x.description}</p>
+                    </HoverCardContent>
+                  </HoverCard>
+                ))}
+              </div>
+
+              {active !== null && (
+                <motion.p
+                  key={`active-${active}`}
+                  className="text-white mt-3 mb-3 p-2 px-5 rounded-md bg-gray-950"
+                  initial={{ opacity: 0, scaleX: 0 }}
+                  animate={{ opacity: 1, scaleX: 1 }}
+                >
+                  {work?.items[active]?.description}
+                </motion.p>
+              )}
+            </div>
+          )}
         </div>
       )}
       <div className="w-full absolute bottom-0 flex gap-4 place-content-end">
