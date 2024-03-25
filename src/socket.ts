@@ -1,2 +1,2 @@
 import { io } from 'socket.io-client';
-export const socket = io("https://rustio.onrender.com"); //https://rustio.onrender.com
+export const socket = io(import.meta.env.SOCKET_URL);
