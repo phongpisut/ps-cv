@@ -273,7 +273,9 @@ function Page() {
       }`}
     >
       <Helmet>
-        <title>{title}</title>
+        <title>
+          {title} {import.meta.env.VITE_SOCKET_URL}
+        </title>
       </Helmet>
       <ToastContainer />
       <AnimatePresence>
