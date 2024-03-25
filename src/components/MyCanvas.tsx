@@ -33,7 +33,7 @@ export default function MyCanvas() {
         />
         <Model onClick={() => {}} />
         {/* </PresentationControls> */}
-        <Environment files={"/sky.hdr"} />
+        <Environment files={"/ps-cv/sky.hdr"} />
         <PerspectiveCamera makeDefault position={[0, 10, 40]} zoom={0.38} />
       </Suspense>
     </Canvas>

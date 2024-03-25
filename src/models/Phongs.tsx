@@ -4,7 +4,7 @@ import { useGLTF } from "@react-three/drei";
 
 export function Model(props: any) {
   const ref = useRef<THREE.Group<THREE.Object3DEventMap>>();
-  const { nodes, materials } = useGLTF("/Phongs.gltf");
+  const { nodes, materials } = useGLTF("/ps-cv/Phongs.gltf");
   return (
     <group {...props} dispose={null} ref={ref}>
       <mesh
@@ -19,4 +19,4 @@ export function Model(props: any) {
   );
 }
 
-useGLTF.preload("/Phongs.gltf");
+useGLTF.preload("/ps-cv/Phongs.gltf");
